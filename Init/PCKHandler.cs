@@ -17,6 +17,7 @@ namespace TQDBEditor
     public partial class PCKHandler : Node
     {
         private Dictionary<string, List<PackedScene>> registeredFileEditors;
+        private Dictionary<string, List<PackedScene>> registeredViews;
         private Dictionary<(string vName, string vClass, string vType), List<PackedScene>> registeredEntryEditors;
         private Dictionary<(string vName, string vClass, string vType), List<PackedScene>> registeredValueControls;
         //private Dictionary<string, Assembly> editorAssemblies;
@@ -27,6 +28,7 @@ namespace TQDBEditor
         public override void _Ready()
         {
             registeredFileEditors = new();
+            registeredViews = new();
             registeredEntryEditors = new();
             registeredValueControls = new();
             //editorAssemblies = new();
@@ -101,56 +103,115 @@ namespace TQDBEditor
             //    }
             //}
 
-            using var resDA = DirAccess.Open("res://Editors");
-            var resEditors = resDA.GetDirectories();
-            foreach (var resEditor in resEditors)
+            var editorsPath = "res://Editors";
+            using var editorsDa = DirAccess.Open(editorsPath);
+            if (editorsDa != null)
             {
-                using var da = DirAccess.Open("res://Editors/" + resEditor);
-                //if (!editorAssemblies.TryGetValue(resEditor, out var editorAssembly))
-                //{
-                //    GD.PrintErr("Could not find assembly for: " + resEditor);
-                //    continue;
-                //}
-                if (!da.FileExists("info.json"))
+                var resEditors = editorsDa.GetDirectories();
+                foreach (var resEditor in resEditors)
                 {
-                    logger?.LogError("Editor: {editor} is missing an info.json",
-                        "res://Editors/" + resEditor);
-                    continue;
-                }
-                using var infoFile = Godot.FileAccess.Open("res://Editors/" + resEditor + "/info.json",
-                    Godot.FileAccess.ModeFlags.Read);
-                //if (!editorAssemblies.TryGetValue(resEditor, out var editorAssembly))
-                //{
-                //    continue;
-                //}
-                try
-                {
-                    var node = JsonNode.Parse(infoFile.GetAsText());
-
-                    var hasFEditors = node.AsObject().TryGetPropertyValue("fileEditors", out var fileEditorsNode);
-                    var hasVEditors = node.AsObject().TryGetPropertyValue("variableEditors", out var variableEditorsNode);
-                    var hasVControls = node.AsObject().TryGetPropertyValue("variableControls", out var variableControlsNode);
-
-                    if (!(hasFEditors || hasVEditors || hasVControls))
+                    using var da = DirAccess.Open(PathExtensions.CombineGodotPath(editorsPath, resEditor));
+                    //if (!editorAssemblies.TryGetValue(resEditor, out var editorAssembly))
+                    //{
+                    //    GD.PrintErr("Could not find assembly for: " + resEditor);
+                    //    continue;
+                    //}
+                    if (!da.FileExists("info.json"))
                     {
-                        logger?.LogError("File {file}: Invalid root object", infoFile);
+                        logger?.LogError("Editor: {editor} is missing an info.json",
+                            PathExtensions.CombineGodotPath(editorsPath, resEditor));
                         continue;
                     }
+                    using var infoFile = Godot.FileAccess.Open(PathExtensions.CombineGodotPath(editorsPath, resEditor, "info.json"),
+                        Godot.FileAccess.ModeFlags.Read);
+                    //if (!editorAssemblies.TryGetValue(resEditor, out var editorAssembly))
+                    //{
+                    //    continue;
+                    //}
+                    try
+                    {
+                        var node = JsonNode.Parse(infoFile.GetAsText());
 
-                    if (hasFEditors)
-                        ParseFEditor(fileEditorsNode, infoFile.GetPath(), resEditor);
-                    if (hasVEditors)
-                        ParseVEditor(variableEditorsNode, infoFile.GetPath(), resEditor);
-                    if (hasVControls)
-                        ParseVControl(variableControlsNode, infoFile.GetPath(), resEditor);
+                        var hasFEditors = node.AsObject().TryGetPropertyValue("fileEditors", out var fileEditorsNode);
+                        var hasVEditors = node.AsObject().TryGetPropertyValue("variableEditors", out var variableEditorsNode);
+                        var hasVControls = node.AsObject().TryGetPropertyValue("variableControls", out var variableControlsNode);
+
+                        if (!(hasFEditors || hasVEditors || hasVControls))
+                        {
+                            logger?.LogError("File {file}: Invalid root object", infoFile);
+                            continue;
+                        }
+
+                        if (hasFEditors)
+                            ParseFEditor(fileEditorsNode, infoFile.GetPath(), resEditor);
+                        if (hasVEditors)
+                            ParseVEditor(variableEditorsNode, infoFile.GetPath(), resEditor);
+                        if (hasVControls)
+                            ParseVControl(variableControlsNode, infoFile.GetPath(), resEditor);
+                    }
+                    catch (JsonException e)
+                    {
+                        logger?.LogError(e, "File: {file}", infoFile);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        logger?.LogError(e, "File: {file}", infoFile);
+                    }
                 }
-                catch (JsonException e)
+            }
+            editorsDa.Dispose();
+
+            var viewsPath = "res://Views";
+            using var viewsDA = DirAccess.Open(viewsPath);
+            if (viewsDA != null)
+            {
+                var resViews = viewsDA.GetDirectories();
+                foreach (var resView in resViews)
                 {
-                    logger?.LogError(e, "File: {file}", infoFile);
-                }
-                catch (InvalidOperationException e)
-                {
-                    logger?.LogError(e, "File: {file}", infoFile);
+                    using var da = DirAccess.Open(PathExtensions.CombineGodotPath(viewsPath, resView));
+                    //if (!editorAssemblies.TryGetValue(resView, out var editorAssembly))
+                    //{
+                    //    GD.PrintErr("Could not find assembly for: " + resView);
+                    //    continue;
+                    //}
+                    if (!da.FileExists("info.json"))
+                    {
+                        logger?.LogError("View: {view} is missing an info.json",
+                            PathExtensions.CombineGodotPath(viewsPath, resView));
+                        continue;
+                    }
+                    using var infoFile = Godot.FileAccess.Open(PathExtensions.CombineGodotPath(viewsPath, resView, "info.json"),
+                        Godot.FileAccess.ModeFlags.Read);
+                    //if (!editorAssemblies.TryGetValue(resEditor, out var editorAssembly))
+                    //{
+                    //    continue;
+                    //}
+                    try
+                    {
+                        var node = JsonNode.Parse(infoFile.GetAsText());
+
+                        var views = node.AsArray();
+
+                        registeredViews.Add(resView, new List<PackedScene>());
+                        foreach (var view in views)
+                        {
+                            var scenePath = PathExtensions.CombineGodotPath(viewsPath, resView, view + ".tscn");
+                            if (!ResourceLoader.Exists(scenePath))
+                            {
+                                logger?.LogError("View {view} referenced in {info} not found", scenePath, infoFile);
+                                continue;
+                            }
+                            registeredViews[resView].Add(LoadPatched(scenePath/*, editorAssembly*/));
+                        }
+                    }
+                    catch (JsonException e)
+                    {
+                        logger?.LogError(e, "File: {file}", infoFile);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        logger?.LogError(e, "File: {file}", infoFile);
+                    }
                 }
             }
         }
@@ -621,6 +682,11 @@ namespace TQDBEditor
                 return null;
             }
         }
+
+        public IReadOnlyDictionary<string, List<PackedScene>> GetViews()
+        {
+            return registeredViews;
+        }
     }
 
     class PluginLoadContext : AssemblyLoadContext
@@ -642,6 +708,20 @@ namespace TQDBEditor
                 return LoadFromAssemblyPath(assemblyPath);
 
             return null;
+        }
+    }
+
+    static class PathExtensions
+    {
+        public static string CombineUsingSeparator(char separator, params string[] paths)
+        {
+            var ret = Path.Combine(paths);
+            return ret.Replace(Path.DirectorySeparatorChar, separator);
+        }
+
+        public static string CombineGodotPath(params string[] paths)
+        {
+            return CombineUsingSeparator('/', paths);
         }
     }
 }
