@@ -1,0 +1,1 @@
+# ByteSquire.tq.TQDB-Editor.AddonBase
