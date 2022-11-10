@@ -14,6 +14,10 @@ namespace TQDBEditor.Common
         private ConfirmationDialog setupDialogNode;
         const string newModDialog = "res://Scenes/Popups/CreateNewMod.tscn";
 
+        const string dirSection = "Directories";
+        const string editorSection = "Editor";
+        const string windowSection = "Window";
+
         [Signal]
         public delegate void WorkingDirChangedEventHandler();
         [Signal]
@@ -75,6 +79,10 @@ namespace TQDBEditor.Common
         public int DefaultValueColumnWidth { get; set; }
         public int DescriptionColumnWidth { get; set; }
 
+        public Vector2i WindowSize { get; set; }
+        public Vector2i WindowPos { get; set; }
+        public int DisplayIndex { get; set; }
+
         // Called when the node enters the scene tree for the first time.
         public override void _Ready()
         {
@@ -97,6 +105,25 @@ namespace TQDBEditor.Common
 
             var tree = GetTree();
             tree.Root.GuiEmbedSubwindows = false;
+
+            var mainWindow = tree.Root;
+            var maxScreenIndex = DisplayServer.GetScreenCount() - 1;
+            if (DisplayIndex > maxScreenIndex)
+                DisplayIndex = maxScreenIndex;
+            var maxSize = DisplayServer.ScreenGetSize(DisplayIndex);
+            if (WindowSize > new Vector2i(0, 0))
+            {
+                if (WindowSize.x >= maxSize.x || WindowSize.y >= maxSize.y)
+                    mainWindow.Mode = Window.ModeEnum.Maximized;
+                mainWindow.Size = WindowSize;
+            }
+            if (WindowPos > new Vector2i(0, 0))
+            {
+                if (WindowPos.x < maxSize.x && WindowPos.y < maxSize.y)
+                    mainWindow.Position = WindowPos;
+            }
+            mainWindow.CurrentScreen = DisplayIndex;
+
             if (!ValidateConfig())
             {
                 if (!ResourceLoader.Exists(setupDialog))
@@ -198,6 +225,9 @@ namespace TQDBEditor.Common
 
         public void SaveConfig()
         {
+            WindowSize = DisplayServer.WindowGetSize();
+            DisplayIndex = DisplayServer.WindowGetCurrentScreen();
+            WindowPos = DisplayServer.WindowGetPosition() - DisplayServer.ScreenGetPosition(DisplayIndex);
             //if (!ValidateConfig())
             //    return;
             ApplyValues();
@@ -209,25 +239,28 @@ namespace TQDBEditor.Common
         public void ApplyValues()
         {
             // Set directory values
-            config.SetValue("Directories", "workingDir", WorkingDir);
-            config.SetValue("Directories", "buildDir", BuildDir);
-            config.SetValue("Directories", "toolsDir", ToolsDir);
-            config.SetValue("Directories", "additionalDirs", AdditionalDirs/*string.Join(",", AdditionalDirs)*/);
-            config.SetValue("Directories", "modDir", modSubDir);
+            config.SetValue(dirSection, "workingDir", WorkingDir);
+            config.SetValue(dirSection, "buildDir", BuildDir);
+            config.SetValue(dirSection, "toolsDir", ToolsDir);
+            config.SetValue(dirSection, "additionalDirs", AdditionalDirs/*string.Join(",", AdditionalDirs)*/);
+            config.SetValue(dirSection, "modDir", modSubDir);
 
             //Set editor values
-            config.SetValue("Editor", "viewDescriptions", ViewDescriptions);
-            config.SetValue("Editor", "nameColumnWidth", NameColumnWidth);
-            config.SetValue("Editor", "classColumnWidth", ClassColumnWidth);
-            config.SetValue("Editor", "typeColumnWidth", TypeColumnWidth);
-            config.SetValue("Editor", "defaultValueColumnWidth", DefaultValueColumnWidth);
-            config.SetValue("Editor", "descriptionColumnWidth", DescriptionColumnWidth);
+            config.SetValue(editorSection, "viewDescriptions", ViewDescriptions);
+            config.SetValue(editorSection, "nameColumnWidth", NameColumnWidth);
+            config.SetValue(editorSection, "classColumnWidth", ClassColumnWidth);
+            config.SetValue(editorSection, "typeColumnWidth", TypeColumnWidth);
+            config.SetValue(editorSection, "defaultValueColumnWidth", DefaultValueColumnWidth);
+            config.SetValue(editorSection, "descriptionColumnWidth", DescriptionColumnWidth);
+
+            // Set window values
+            config.SetValue(windowSection, "windowSize", WindowSize);
+            config.SetValue(windowSection, "windowPos", WindowPos);
+            config.SetValue(windowSection, "windowDisplay", DisplayIndex);
         }
 
         public void LoadConfig()
         {
-            var dirSection = "Directories";
-            var editorSection = "Editor";
             if (config.Load(configPath) != Error.Ok)
             {
                 LoadArtManagerOptions();
@@ -248,6 +281,11 @@ namespace TQDBEditor.Common
             TypeColumnWidth = (int)config.GetValue(editorSection, "typeColumnWidth", -1);
             DefaultValueColumnWidth = (int)config.GetValue(editorSection, "defaultValueColumnWidth", -1);
             DescriptionColumnWidth = (int)config.GetValue(editorSection, "descriptionColumnWidth", -1);
+
+            // Load window values
+            WindowSize = (Vector2i)config.GetValue(windowSection, "windowSize", new Vector2i(0, 0));
+            WindowPos = (Vector2i)config.GetValue(windowSection, "windowPos", new Vector2i(0, 0));
+            DisplayIndex = (int)config.GetValue(windowSection, "windowDisplay", 0);
 
             logger?.LogInformation("Loaded editor config");
         }
