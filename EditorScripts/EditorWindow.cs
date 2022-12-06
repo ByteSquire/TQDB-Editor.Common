@@ -147,6 +147,9 @@ namespace TQDBEditor.EditorScripts
 
         public void Do(string key, string value)
         {
+            if (DBRFile[key].Value == value)
+                return;
+
             undoRedo.CreateAction("Write value");
 
             undoRedo.AddDoProperty(this, nameof(UndoRedoProp),
@@ -161,7 +164,7 @@ namespace TQDBEditor.EditorScripts
 
         public void Redo() => undoRedo.Redo();
 
-        protected abstract List<string> GetSelectedVariables();
+        protected abstract IReadOnlyList<string> GetSelectedVariables();
 
         protected abstract bool TryGetNextVariable(string currentVar, out string varName);
 
@@ -173,12 +176,19 @@ namespace TQDBEditor.EditorScripts
 
             var clipboardBuilder = new StringBuilder();
 
-            foreach (var name in selectedVariables)
+            string name;
+            for (int i = 0; i < selectedVariables.Count - 2; i++)
             {
+                name = selectedVariables[i];
                 clipboardBuilder.Append('#');
                 clipboardBuilder.AppendLine(name);
                 clipboardBuilder.AppendLine(DBRFile[name].Value);
             }
+            name = selectedVariables[^1];
+            clipboardBuilder.Append('#');
+            clipboardBuilder.AppendLine(name);
+            clipboardBuilder.Append(DBRFile[name].Value);
+
             DisplayServer.ClipboardSet(clipboardBuilder.ToString());
         }
 

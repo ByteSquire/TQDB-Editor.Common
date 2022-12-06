@@ -7,7 +7,7 @@
 	<Authors>ByteSquire</Authors>
 	<Company>ByteSquire.tq</Company>
 	<Product>TQDB-Editor.Common</Product>
-	<Version>0.9.5</Version>
+	<Version>0.9.6</Version>
 	<PackageId>$(Company).$(Product)</PackageId>
   </PropertyGroup>
 
