@@ -1,5 +1,7 @@
 ﻿using Godot;
+using System.Collections;
 using System.Net.Mime;
+using System.Text;
 using TQDB_Parser.DBR;
 
 namespace TQDBEditor.EditorScripts
@@ -158,6 +160,106 @@ namespace TQDBEditor.EditorScripts
         public void Undo() => undoRedo.Undo();
 
         public void Redo() => undoRedo.Redo();
+
+        protected abstract List<string> GetSelectedVariables();
+
+        protected abstract bool TryGetNextVariable(string currentVar, out string varName);
+
+        public void Copy()
+        {
+            var selectedVariables = GetSelectedVariables();
+            if (selectedVariables.Count == 0)
+                return;
+
+            var clipboardBuilder = new StringBuilder();
+
+            foreach (var name in selectedVariables)
+            {
+                clipboardBuilder.Append('#');
+                clipboardBuilder.AppendLine(name);
+                clipboardBuilder.AppendLine(DBRFile[name].Value);
+            }
+            DisplayServer.ClipboardSet(clipboardBuilder.ToString());
+        }
+
+        public void Paste()
+        {
+            if (DisplayServer.ClipboardHas())
+                Paste(DisplayServer.ClipboardGet());
+        }
+
+        public void Paste(string pasteContent)
+        {
+            var lines = pasteContent.Split(System.Environment.NewLine);
+            bool justValues = lines.Length == 1;
+            if (lines.Length == 1)
+                lines = pasteContent.Split(',');
+
+            var selected = GetSelectedVariables();
+            using var selectedEnumerator = new VariableEnumerator(selected.GetEnumerator(), this);
+            string lastName = null;
+            foreach (var line in lines)
+            {
+                if (!justValues && line.StartsWith('#'))
+                {
+                    lastName = line[1..];
+                    continue;
+                }
+                if (lastName != null)
+                {
+                    Do(lastName, line);
+                    lastName = null;
+                    continue;
+                }
+                if (selectedEnumerator.MoveNext())
+                {
+                    Do(selectedEnumerator.Current, line);
+                    continue;
+                }
+            }
+        }
+
+        class VariableEnumerator : IEnumerator<string>
+        {
+            private readonly IEnumerator<string> baseEnumerator;
+            private readonly EditorWindow window;
+            private string current;
+
+            public VariableEnumerator(IEnumerator<string> baseEnumerator, EditorWindow window)
+            {
+                this.baseEnumerator = baseEnumerator;
+                this.window = window;
+            }
+
+            public string Current => current;
+
+            object IEnumerator.Current => current;
+
+            public void Dispose()
+            {
+                baseEnumerator.Dispose();
+            }
+
+            public bool MoveNext()
+            {
+                if (baseEnumerator.MoveNext())
+                {
+                    current = baseEnumerator.Current;
+                    return true;
+                }
+                if (window.TryGetNextVariable(current, out var name))
+                {
+                    current = name;
+                    return true;
+                }
+                return false;
+            }
+
+            public void Reset()
+            {
+                baseEnumerator.Reset();
+            }
+        }
 
         public void OnFileSaved()
         {
