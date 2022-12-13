@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TQDB_Parser.DBR;
 
-namespace TQDBEditor.EditorScripts
+namespace TQDB_Editor.Controls
 {
     public abstract partial class VariableControl : Control
     {

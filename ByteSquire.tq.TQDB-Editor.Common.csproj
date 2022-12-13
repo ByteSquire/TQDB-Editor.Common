@@ -3,19 +3,35 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>TQDB_Editor.Common</RootNamespace>
+	<Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	<Authors>ByteSquire</Authors>
 	<Company>ByteSquire.tq</Company>
 	<Product>TQDB-Editor.Common</Product>
-	<Version>0.9.6</Version>
+	<Version>1.0.0-beta.1</Version>
 	<PackageId>$(Company).$(Product)</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
+    <AvaloniaXaml Remove="EditorScripts\EditorDialog.axaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="UserControls\EditorDialog.axaml">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="ByteSquire.tq.TQDB-Parser" Version="1.2.3" />
-    <PackageReference Include="Godot.SourceGenerators" Version="4.0.0-beta.4" />
-    <PackageReference Include="GodotSharp" Version="4.0.0-beta.4" />
-    <PackageReference Include="GodotSharpEditor" Version="4.0.0-beta.4" />
+	  
+	<PackageReference Include="Avalonia" Version="11.0.0-preview4" />
+	<PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview4" />
+	<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+	<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview4" />
+	<PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
+
+	<PackageReference Include="Prism.DryIoc.Avalonia" Version="8.1.97.3-custom" />
   </ItemGroup>
 
 </Project>

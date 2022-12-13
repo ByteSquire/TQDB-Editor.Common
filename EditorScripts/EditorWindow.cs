@@ -4,7 +4,7 @@ using System.Net.Mime;
 using System.Text;
 using TQDB_Parser.DBR;
 
-namespace TQDBEditor.EditorScripts
+namespace TQDB_Editor.Controls
 {
     public abstract partial class EditorWindow : Window
     {

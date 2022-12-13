@@ -1,31 +1,25 @@
-using Godot;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using Prism.Modularity;
 using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.Loader;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using TQDB_Parser;
-using TQDBEditor.Common;
 
-namespace TQDBEditor
+namespace TQDB_Editor.Common.Services
 {
-    public partial class PCKHandler : Node
+    public partial class ModuleHandler
     {
-        private Dictionary<string, List<PackedScene>> registeredFileEditors;
-        private Dictionary<string, List<PackedScene>> registeredViews;
-        private Dictionary<(string vName, string vClass, string vType), List<PackedScene>> registeredEntryEditors;
-        private Dictionary<(string vName, string vClass, string vType), List<PackedScene>> registeredValueControls;
+        private Dictionary<string, List<IModule>> registeredFileEditors;
+        private Dictionary<string, List<IModule>> registeredViews;
+        private Dictionary<(string vName, string vClass, string vType), List<IModule>> registeredEntryEditors;
+        private Dictionary<(string vName, string vClass, string vType), List<IModule>> registeredValueControls;
         //private Dictionary<string, Assembly> editorAssemblies;
 
         private ILogger logger;
-        private Config config;
+        private ConfigService config;
 
-        public override void _Ready()
+        public ModuleHandler(ConfigService config, ILogger logger)
         {
             registeredFileEditors = new();
             registeredViews = new();
@@ -33,14 +27,8 @@ namespace TQDBEditor
             registeredValueControls = new();
             //editorAssemblies = new();
 
-            config = this.GetEditorConfig();
-            logger = this.GetConsoleLogger();
-
-            if (!OS.HasFeature("editor"))
-            {
-                var root = Directory.GetParent(Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName).FullName;
-                System.Environment.CurrentDirectory = root;
-            }
+            this.logger = logger;
+            this.config = config;
 
             ReadPcks();
         }
