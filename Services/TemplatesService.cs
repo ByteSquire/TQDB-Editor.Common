@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using TQDB_Parser;
-using TQDBEditor.Common.Services;
 
 namespace TQDB_Editor.Common.Services
 {
@@ -17,7 +16,7 @@ namespace TQDB_Editor.Common.Services
 
         public TemplateManager TemplateManager => templateManager;
 
-        public TemplatesService(IConfigService config, ILogService logService)
+        public TemplatesService(IConfigService config, IConsoleLogService logService)
         {
             this.config = config;
             logger = logService;

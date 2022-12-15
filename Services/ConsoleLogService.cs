@@ -11,13 +11,12 @@ using Avalonia.Utilities;
 using DynamicData.Kernel;
 using DynamicData;
 using TQDB_Editor.Common.Controls;
-using TQDB_Editor.Common.Services;
 
-namespace TQDBEditor.Common.Services
+namespace TQDB_Editor.Common.Services
 {
-    public interface ILogService : ILogger { }
+    public interface IConsoleLogService : ILogger { }
 
-    public class ConsoleLogService : ILogService
+    public class ConsoleLogService : IConsoleLogService
     {
         private readonly LogLevel _level;
 

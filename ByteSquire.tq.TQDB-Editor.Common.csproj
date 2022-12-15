@@ -13,16 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaXaml Remove="EditorScripts\EditorDialog.axaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="UserControls\EditorDialog.axaml">
-      <DependentUpon>%(Filename)</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="ByteSquire.tq.TQDB-Parser" Version="1.2.3" />
 	  
 	<PackageReference Include="Avalonia" Version="11.0.0-preview4" />
