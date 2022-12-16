@@ -3,7 +3,29 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="TQDB_Editor.Common.UserControls.EditorFindWindow"
+        x:Class="TQDB_Editor.Common.Controls.EditorFindWindow"
         Title="EditorFindWindow">
-  Welcome to Avalonia!
+	<Grid ColumnDefinitions="Auto,*,*">
+		<Border Padding="3">
+			<WrapPanel Grid.Column="0" Orientation="Vertical">
+				<ToggleSwitch Name="MatchInvalid" OnContent="Match Invalid Values" OffContent="{Binding $self.OnContent}"/>
+				<ToggleSwitch Name="MatchValue" IsChecked="True" OnContent="Match Value" OffContent="{Binding $self.OnContent}"/>
+				<ToggleSwitch Name="MatchName" OnContent="Match Name" OffContent="{Binding $self.OnContent}"/>
+				<ToggleSwitch Name="MatchType" OnContent="Match Type" OffContent="{Binding $self.OnContent}"/>
+				<ToggleSwitch Name="MatchClass" OnContent="Match Class" OffContent="{Binding $self.OnContent}"/>
+				<ToggleSwitch Name="MatchDescription" OnContent="Match Description" OffContent="{Binding $self.OnContent}"/>
+				<ToggleSwitch Name="MatchDefault" OnContent="Match Default Value" OffContent="{Binding $self.OnContent}"/>
+			</WrapPanel>
+		</Border>
+		<TextBox Name="SearchInput" Grid.Column="1" Watermark="Search here... (use * to match any)"/>
+		<ItemsRepeater Name="ResultList" Grid.Column="2">
+			<ItemsRepeater.ItemTemplate>
+				<DataTemplate>
+					<Border Focusable="True" Padding="1" BorderBrush="Gray" BorderThickness="1">
+						<TextBlock Text="{Binding Value}"/>
+					</Border>
+				</DataTemplate>
+			</ItemsRepeater.ItemTemplate>
+		</ItemsRepeater>
+	</Grid>
 </Window>
